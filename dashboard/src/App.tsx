@@ -6,11 +6,10 @@ import CalculatorPage from './CalculatorPage'
 import VisualizePage from './VisualizePage'
 import ArchitecturePage from './ArchitecturePage'
 import AboutPage from './AboutPage'
-import { loadSession, logout, type AuthSession } from './auth'
+import { apiFetch, loadSession, logout, type AuthSession } from './auth'
 import { applyTheme, getStoredTheme, type Theme } from './theme'
 import type { ApiError, CompareResult, TraceResult } from './types'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5080'
 
 function Dashboard({ session, onLogout }: { session: AuthSession; onLogout: () => void }) {
   const [theme, setTheme] = useState<Theme>(() => getStoredTheme())
@@ -24,7 +23,7 @@ function Dashboard({ session, onLogout }: { session: AuthSession; onLogout: () =
   useEffect(() => applyTheme(theme), [theme])
 
   async function post<T>(path: string, expr: string): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await apiFetch(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` },
       body: JSON.stringify({ expression: expr }),

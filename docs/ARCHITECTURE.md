@@ -75,10 +75,11 @@ flowchart LR
   `Id`, `Username` (unique), `PasswordHash` (BCrypt), `Role`, `CreatedAtUtc`).
   Chosen so the app runs with zero external services for local dev/review;
   see `docs/DEPLOYMENT.md` for the Supabase Postgres swap.
-- **Seeding**: on first run, if `Users` is empty, one `admin` user is created
-  with a cryptographically random password. That password is logged once
-  (`Warning` level) and never written anywhere else — not to a file in this
-  repo, not in plaintext to the database.
+- **Seeding**: on first run, if `Users` is empty, one `admin` user is created.
+  If `Seed:AdminPassword` is configured it is used and never logged. If not,
+  in Development only, a random password is generated and logged once to the
+  local console. In any hosted environment without it, no admin is seeded —
+  so no password ever lands in a host's log stream — and users self-register.
 - **Tokens**: stateless JWTs, 60-minute expiry. `/api/auth/logout` is a
   convenience endpoint only (confirms the token is still valid) — there is
   no server-side revocation list; the client is responsible for discarding
@@ -109,7 +110,7 @@ flowchart LR
 | DoS via huge input | 1000-character expression cap enforced in `Tokenizer` before any parsing work. |
 | DoS via request flooding | Fixed-window rate limiter, 60 requests/min per client IP. |
 | Information disclosure | `ExpressionException` messages are safe, specific validation errors — no stack traces returned to clients. |
-| CSRF / cross-origin abuse | CORS locked to an explicit allow-list (`AllowedOrigins` config), not `AllowAnyOrigin`. |
+| CSRF / cross-origin abuse | CORS allows only configured origins: exact `AllowedOrigins`, plus optional `AllowedOriginPatterns` (one `*` inside a label that also has fixed text, followed by at least two fixed labels — anything wider fails startup). Never `AllowAnyOrigin`. |
 | Clickjacking / MIME sniffing | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` response headers. |
 | Dependency supply chain | Calculation logic uses no third-party packages; auth/DB packages (EF Core SQLite, JWT Bearer, BCrypt.Net-Next) were approved explicitly before adding, per this repo's policy. A transitive `SQLitePCLRaw` CVE (NU1903) was caught during install and pinned to a patched version. |
 | Password storage | Never plaintext — BCrypt hash only, stored in SQLite. |
