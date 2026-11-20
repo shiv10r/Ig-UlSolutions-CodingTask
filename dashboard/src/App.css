@@ -79,12 +79,27 @@ body {
   font-size: 0.9rem;
   color: var(--muted);
   cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
+}
+
+.nav-tab:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.nav-tab:active {
+  transform: scale(0.96);
 }
 
 .nav-tab.active {
   background: var(--accent);
   color: var(--accent-contrast);
   font-weight: 600;
+}
+
+.nav-tab.active:hover {
+  background: var(--accent);
+  color: var(--accent-contrast);
 }
 
 .nav-actions {
@@ -107,11 +122,32 @@ body {
   cursor: pointer;
   font-size: 1rem;
   line-height: 1;
+  transition: transform 0.2s ease, background 0.18s ease;
+}
+
+.icon-button:hover {
+  background: var(--border);
+  transform: rotate(15deg);
+}
+
+.icon-button:active {
+  transform: scale(0.9);
 }
 
 /* Page / cards */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .page {
   padding: 1.25rem 1rem 3rem;
+  animation: fadeSlideIn 0.3s ease both;
 }
 
 .card {
@@ -121,10 +157,16 @@ body {
   padding: 1.25rem 1.5rem;
   margin-top: 1.25rem;
   box-shadow: var(--shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .card:first-child {
   margin-top: 0;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .muted {
@@ -144,6 +186,13 @@ body {
   border: 1px solid var(--border);
   background: var(--input-bg);
   color: var(--text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-row input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .input-row button {
@@ -154,11 +203,38 @@ body {
   color: var(--accent-contrast);
   cursor: pointer;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.input-row button:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.input-row button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .input-row button:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--accent-contrast) 40%, transparent);
+  border-top-color: var(--accent-contrast);
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
 }
 
 .examples {
@@ -176,6 +252,16 @@ body {
   padding: 0.25rem 0.75rem;
   cursor: pointer;
   font-size: 0.85rem;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+
+.example-chip:hover {
+  background: var(--border);
+  border-color: var(--accent);
+}
+
+.example-chip:active {
+  transform: scale(0.95);
 }
 
 .error {
@@ -206,6 +292,16 @@ body {
   flex-direction: column;
   gap: 0.2rem;
   box-shadow: var(--shadow);
+  animation: fadeSlideIn 0.35s ease both;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kpi-card:nth-child(2) { animation-delay: 0.05s; }
+.kpi-card:nth-child(3) { animation-delay: 0.1s; }
+
+.kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .kpi-label {
@@ -249,6 +345,17 @@ body {
   color: var(--accent-contrast);
   font-weight: 600;
   cursor: pointer;
+  animation: fadeSlideIn 0.35s ease 0.15s both;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.cta:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.cta:active {
+  transform: scale(0.98);
 }
 
 /* Stepper */
@@ -306,6 +413,11 @@ body {
   background: var(--border);
   cursor: pointer;
   padding: 0;
+  transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+}
+
+.dot:hover {
+  transform: scale(1.4);
 }
 
 .dot-done {
@@ -321,6 +433,7 @@ body {
 
 .stepper-card {
   min-height: 4.5rem;
+  animation: fadeIn 0.25s ease;
 }
 
 .stepper-desc {
@@ -349,6 +462,15 @@ body {
   padding: 0.35rem 0.7rem;
   cursor: pointer;
   color: var(--text);
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.stepper-controls button:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.stepper-controls button:active:not(:disabled) {
+  transform: scale(0.95);
 }
 
 .stepper-controls button:disabled {
@@ -372,6 +494,12 @@ body {
   fill: var(--card-bg);
   stroke: var(--border);
   stroke-width: 1.5;
+  transition: stroke 0.2s ease, filter 0.2s ease;
+}
+
+.diagram-box:hover {
+  stroke: var(--accent);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
 }
 
 .diagram-box-accent {
@@ -462,6 +590,15 @@ form.card button[type='submit'] {
   color: var(--accent-contrast);
   cursor: pointer;
   font-weight: 600;
+  transition: transform 0.12s ease, filter 0.15s ease;
+}
+
+form.card button[type='submit']:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+form.card button[type='submit']:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 form.card button[type='submit']:disabled {
@@ -477,4 +614,9 @@ form.card button[type='submit']:disabled {
   cursor: pointer;
   padding: 0;
   font-size: 0.9rem;
+  transition: opacity 0.15s ease;
+}
+
+.link-button:hover {
+  opacity: 0.7;
 }

@@ -24,7 +24,7 @@ export default function TraceStepper({ title, badge, steps }: { title: string; b
         ))}
       </div>
 
-      <div className="stepper-card">
+      <div className="stepper-card" key={step.stepNumber}>
         <p className="stepper-desc">{step.description}</p>
         <p className="stepper-state">{step.state}</p>
       </div>

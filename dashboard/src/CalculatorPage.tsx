@@ -25,6 +25,7 @@ export default function CalculatorPage({
             onKeyDown={(e) => e.key === 'Enter' && onEvaluate(expression)}
           />
           <button onClick={() => onEvaluate(expression)} disabled={loading}>
+            {loading && <span className="spinner" />}
             {loading ? 'Evaluating…' : 'Evaluate'}
           </button>
         </div>
