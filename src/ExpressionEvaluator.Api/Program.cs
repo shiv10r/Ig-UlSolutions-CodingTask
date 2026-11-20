@@ -2,9 +2,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.RateLimiting;
 using ExpressionEvaluator.Api.Data;
+using ExpressionEvaluator.Api.Security;
 using ExpressionEvaluator.Api.Services;
 using ExpressionEvaluator.Core;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -91,13 +93,31 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
+var originMatcher = new OriginMatcher(
+    builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? [],
+    builder.Configuration.GetSection("AllowedOriginPatterns").Get<string[]>() ?? []);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Dashboard", policy =>
-        policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? [])
+        policy.SetIsOriginAllowed(originMatcher.IsAllowed)
               .AllowAnyHeader()
               .WithMethods("GET", "POST"));
 });
+
+// Behind Render's proxy every request arrives from the proxy's IP, which would
+// put all users in one rate-limit bucket. Trust only the last X-Forwarded-For
+// hop (the one the proxy appends), so clients can't spoof their own IP.
+if (!string.IsNullOrEmpty(renderPort))
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.ForwardLimit = 1;
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+}
 
 var app = builder.Build();
 
@@ -145,10 +165,21 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseRateLimiter();
+if (!string.IsNullOrEmpty(renderPort))
+{
+    app.UseForwardedHeaders();
+}
+
+// CORS runs before the rate limiter so a 429 still carries CORS headers -
+// otherwise the browser reports it as a misleading CORS error.
 app.UseCors("Dashboard");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
+   .AllowAnonymous()
+   .DisableRateLimiting();
 
 app.MapControllers();
 

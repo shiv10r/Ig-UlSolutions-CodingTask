@@ -35,6 +35,15 @@ set up. This documents the path end to end.
    - `AllowedOrigins__0` — the deployed Vercel URL(s) that should be allowed
      to call this API (exact origin, e.g. `https://your-app.vercel.app`,
      no trailing slash); add `AllowedOrigins__1`, etc. for more
+   - `AllowedOriginPatterns__0` — optional, for Vercel preview URLs whose
+     hash changes every deploy, e.g. `https://dashboard-*-vsr11.vercel.app`.
+     `*` matches one host label only (letters, digits, hyphens — never a
+     dot), so it can't be widened to another domain; a bare `*` is ignored.
+
+   Set Render's **Health Check Path** to `/health` (anonymous, not rate
+   limited). Behind Render's proxy the API trusts only the last
+   `X-Forwarded-For` hop, so rate limiting is per real client, not shared
+   by everyone coming through the proxy.
 3. **Frontend (Vercel)**: deploy `dashboard/` with build command
    `npm run build`, output directory `dist`. Set `VITE_API_BASE_URL` to the
    Render API's public URL.
@@ -72,8 +81,12 @@ succeeded with 204, but the actual request was blocked) because the
 Vercel URL wasn't in `AllowedOrigins` on the Render deployment. Fix: add
 the exact Vercel origin to `AllowedOrigins__0` (etc.) in Render's
 environment variables. Vercel **preview** URLs change per deploy (the
-random hash in `dashboard-<hash>-<team>.vercel.app`), so point this at
-Vercel's stable production URL/alias instead, or it goes stale every
-redeploy.
+random hash in `dashboard-<hash>-<team>.vercel.app`) - use
+`AllowedOriginPatterns__0=https://dashboard-*-<team>.vercel.app` to cover
+them all, or point `AllowedOrigins__0` at Vercel's stable production URL.
+
+The dashboard now reports these failures as `Can't reach the API at
+{url}...` instead of a bare "Failed to fetch", so a wrong
+`VITE_API_BASE_URL` or missing CORS entry is visible on screen.
 
 DevOps checklist for deploy-related changes: `agents/devops.md`.

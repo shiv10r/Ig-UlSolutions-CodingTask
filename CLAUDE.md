@@ -65,5 +65,12 @@ Per-role responsibilities and checklists (backend, frontend, QA, security,
 DevOps, etc.) live in `agents/` — read the matching file before making a
 change in that area, rather than re-deriving the rules here.
 
+`.claude/agents/` registers each role as a real Claude Code subagent
+(`qa-engineer`, `security-reviewer`, `code-reviewer`, `backend-dev`,
+`frontend-dev`, `devops`, `architecture`, `doc-writer`, `task-manager`,
+`ui-ux-designer`). Each is a thin wrapper that loads its `agents/*.md`
+checklist, so the rules still live in one place. Launch `qa-engineer` and
+`security-reviewer` on every branch before opening a PR.
+
 Branch from `develop01`, open PRs as `feature/* -> develop01`. Merges to
 `main` are handled by the repository owner, not by an agent.
