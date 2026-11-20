@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { login, type AuthSession } from './auth'
+import { applyTheme, getStoredTheme } from './theme'
 
 export default function LoginForm({ onLogin }: { onLogin: (session: AuthSession) => void }) {
   const [username, setUsername] = useState('admin')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => applyTheme(getStoredTheme()), [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -21,13 +24,13 @@ export default function LoginForm({ onLogin }: { onLogin: (session: AuthSession)
   }
 
   return (
-    <main className="page">
-      <header>
+    <main className="login-shell">
+      <div className="login-header">
         <h1>Expression Evaluator</h1>
-        <p className="subtitle">Sign in to use the live demo</p>
-      </header>
+        <p className="muted">Sign in to use the live demo</p>
+      </div>
 
-      <form className="card" onSubmit={handleSubmit}>
+      <form className="card login-card" onSubmit={handleSubmit}>
         <h2>Login</h2>
         <label className="field">
           Username

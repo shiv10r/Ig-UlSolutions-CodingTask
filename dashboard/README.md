@@ -1,9 +1,18 @@
 # Expression Evaluator — Dashboard
 
 Small React (Vite + TypeScript) demo for the Expression Evaluator API: sign
-in via `/api/auth/login`, then a live calculator that calls
-`/api/expression/evaluate/compare` and `/evaluate/trace` and shows both the
-brute-force and optimized results (and how each got there) side by side.
+in via `/api/auth/login`, then navigate four tabs —
+
+- **Calculator** — enter an expression, see brute-force vs optimized results
+  as KPI-style cards with an agreement badge.
+- **Visualize** — step through each algorithm's trace interactively (dots,
+  prev/next), instead of a wall of text.
+- **Architecture** — a live-rendered inline-SVG diagram (not a static image
+  or a Mermaid block that may not render), theme-aware.
+- **About** — short AI-assisted-development note and repo link.
+
+Light/dark theme toggle (nav bar, persisted in `localStorage`) applies
+across all four.
 
 ## Run locally
 
