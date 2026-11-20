@@ -19,9 +19,11 @@ evaluator implementations, tests, security hardening, and docs.
   - `OptimizedExpressionEvaluator` — O(n) single-pass stack algorithm.
 - `src/ExpressionEvaluator.Api` — ASP.NET Core MVC Web API. Controllers are
   thin; `Services/ExpressionEvaluationService` orchestrates the two
-  evaluators. Endpoints: `/evaluate`, `/evaluate/brute-force`,
-  `/evaluate/compare`, `/evaluate/trace` (step-by-step trace for both
-  algorithms, used by the dashboard).
+  evaluators. All `/api/expression/*` endpoints (`/evaluate`,
+  `/evaluate/brute-force`, `/evaluate/compare`, `/evaluate/trace`) require a
+  JWT (`[Authorize]`). `Data/AppDbContext` (SQLite locally) +
+  `Services/AuthService` + `Controllers/AuthController` provide
+  `/api/auth/login` and `/api/auth/logout`.
 - `tests/ExpressionEvaluator.Tests` — xUnit tests (evaluators, service,
   controller; shared theory data so both algorithms are held to the same
   contract).

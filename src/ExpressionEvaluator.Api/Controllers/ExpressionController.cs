@@ -1,6 +1,7 @@
 using ExpressionEvaluator.Api.Models;
 using ExpressionEvaluator.Api.Services;
 using ExpressionEvaluator.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpressionEvaluator.Api.Controllers;
@@ -8,6 +9,7 @@ namespace ExpressionEvaluator.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+[Authorize]
 public class ExpressionController(
     ILogger<ExpressionController> logger,
     IExpressionEvaluationService evaluationService) : ControllerBase

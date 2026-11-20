@@ -15,10 +15,13 @@ CI/CD, branching policy, deployment pipelines.
   `http://localhost:5173` (`npm run dev` inside `dashboard/`).
 
 ## Not yet done (deliberately deferred, needs explicit go-ahead)
-- Dashboard deploy to Vercel, or a GitHub Actions deploy job — not set up
-  yet; requires deciding hosting target and env vars (API URL) first.
-- API deploy target (Azure App Service / container) — not required by the
-  task, out of scope unless requested.
+- Full deployment plan written: `docs/DEPLOYMENT.md` (Vercel for `dashboard/`,
+  Render for the API, Supabase Postgres swapped in for local SQLite).
+  Not executed yet — needs hosting accounts/secrets, which only the repo
+  owner should hold.
+- Local data store is SQLite (`expressionevaluator.db`, gitignored, never
+  committed) with one seeded admin user — see `docs/ARCHITECTURE.md` for
+  the seeding/secret-handling rules.
 
 ## Checklist before adding a deploy step
 - [ ] Confirm hosting target with the repo owner before wiring secrets/workflows.
