@@ -12,7 +12,7 @@ Standard verification pass:
 1. `dotnet build` and `dotnet test` from the repo root. Report the pass/fail count.
 2. `npm run build` inside `dashboard/`.
 3. Start the API locally with `ASPNETCORE_ENVIRONMENT=Development` on a free port, then with curl verify: unauthenticated `/api/expression/evaluate` -> 401; register -> 201; duplicate register -> 409; login -> 200 + token; evaluate `4+5*2`, `4+5/2`, `4+5/2-1` with the token -> 14, 6.5, 5.5; `/evaluate/compare` and `/evaluate/trace` return 200; division by zero -> 400; `/health` -> 200; a CORS preflight from an allowed origin returns `Access-Control-Allow-Origin`.
-4. If a deployed URL is provided, run the same curl checks against it.
+4. After any merge to `main` or any Render/Vercel redeploy, run `bash scripts/smoke-test.sh` (defaults to the live API and site; pass other URLs as arguments). This is mandatory before anyone says the deployed site works. Paste its results table in your report.
 5. Stop any process you started, and delete any SQLite file you created outside the normal dev database.
 
 Report: each check, expected vs actual, and a final PASS/FAIL. Do not modify source files; if something fails, describe the failure and the likely cause precisely.
