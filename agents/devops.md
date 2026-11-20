@@ -46,3 +46,4 @@ so setting the var without rebuilding does nothing).
 - [ ] `main` is the deploy branch for both Vercel and Render — not `develop01` or a feature branch.
 - [ ] Vercel's deployed origin is in Render's `AllowedOrigins__*` env vars (use the stable production URL, not a per-deploy preview hash).
 - [ ] `Jwt__Key` and `ConnectionStrings__Default` are set as Render env vars before the service is expected to actually work, not just to boot.
+- [ ] **After every merge to `main` and every redeploy:** run `bash scripts/smoke-test.sh` against the live URLs. Nothing is "working" until it prints `RESULT: PASS`. It also checks the live JS bundle points at the API, catching stale Vercel env vars (such as the trailing-slash `//api` 404 incident).

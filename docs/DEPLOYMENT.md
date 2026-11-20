@@ -94,4 +94,27 @@ The dashboard now reports these failures as `Can't reach the API at
 {url}...` instead of a bare "Failed to fetch", so a wrong
 `VITE_API_BASE_URL` or missing CORS entry is visible on screen.
 
+## Live URLs and post-deploy check
+
+- API: `https://ig-ulsolutions-codingtask.onrender.com` (Render, `main`)
+- Dashboard: `https://dashboard-ten-fawn-97.vercel.app` (Vercel, `main`)
+
+After every merge to `main` and every redeploy, run:
+
+```bash
+bash scripts/smoke-test.sh
+```
+
+It checks health, register/login, the three task examples, division by
+zero, CORS for the site origin, that the site is public, and that the live
+bundle points at this API. Deploys aren't done until it prints
+`RESULT: PASS`.
+
+## Known failure mode: trailing slash in VITE_API_BASE_URL
+
+`VITE_API_BASE_URL=https://...onrender.com/` made the dashboard call
+`//api/...` (404). The dashboard now strips trailing slashes. If a browser
+still sends `//api/...`, it's running a cached old bundle or an old
+deployment URL: hard-refresh the production URL.
+
 DevOps checklist for deploy-related changes: `agents/devops.md`.
