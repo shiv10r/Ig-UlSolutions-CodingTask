@@ -10,6 +10,15 @@ type CompareResult = {
   match: boolean
 }
 
+type EvaluationStep = { stepNumber: number; description: string; state: string }
+
+type TraceResult = {
+  expression: string
+  bruteForceSteps: EvaluationStep[]
+  optimizedSteps: EvaluationStep[]
+  result: number
+}
+
 type ApiError = { detail?: string; title?: string }
 
 const EXAMPLES = ['4+5*2', '4+5/2', '4+5/2-1']
@@ -17,24 +26,35 @@ const EXAMPLES = ['4+5*2', '4+5/2', '4+5/2-1']
 function App() {
   const [expression, setExpression] = useState('4+5/2-1')
   const [result, setResult] = useState<CompareResult | null>(null)
+  const [trace, setTrace] = useState<TraceResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  async function post<T>(path: string, expr: string): Promise<T> {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expression: expr }),
+    })
+    if (!res.ok) {
+      const body: ApiError = await res.json().catch(() => ({}))
+      throw new Error(body.detail ?? `Request failed (${res.status})`)
+    }
+    return res.json()
+  }
 
   async function evaluate(expr: string) {
     setLoading(true)
     setError(null)
     setResult(null)
+    setTrace(null)
     try {
-      const res = await fetch(`${API_BASE}/api/expression/evaluate/compare`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ expression: expr }),
-      })
-      if (!res.ok) {
-        const body: ApiError = await res.json().catch(() => ({}))
-        throw new Error(body.detail ?? `Request failed (${res.status})`)
-      }
-      setResult(await res.json())
+      const [compareResult, traceResult] = await Promise.all([
+        post<CompareResult>('/api/expression/evaluate/compare', expr),
+        post<TraceResult>('/api/expression/evaluate/trace', expr),
+      ])
+      setResult(compareResult)
+      setTrace(traceResult)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not reach the API.')
     } finally {
@@ -89,6 +109,36 @@ function App() {
           </div>
         )}
       </section>
+
+      {trace && (
+        <section className="card">
+          <h2>How each algorithm got there</h2>
+          <div className="trace-columns">
+            <div className="trace-column">
+              <h3>Brute-force (O(n²))</h3>
+              <ol className="steps">
+                {trace.bruteForceSteps.map((step) => (
+                  <li key={step.stepNumber}>
+                    <span className="step-desc">{step.description}</span>
+                    <span className="step-state">{step.state}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="trace-column">
+              <h3>Optimized (O(n))</h3>
+              <ol className="steps">
+                {trace.optimizedSteps.map((step) => (
+                  <li key={step.stepNumber}>
+                    <span className="step-desc">{step.description}</span>
+                    <span className="step-state">{step.state}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="card">
         <h2>AI-assisted development</h2>

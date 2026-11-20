@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using ExpressionEvaluator.Api.Services;
 using ExpressionEvaluator.Core;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,7 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddKeyedSingleton<IExpressionEvaluator, BruteForceExpressionEvaluator>("bruteForce");
 builder.Services.AddKeyedSingleton<IExpressionEvaluator, OptimizedExpressionEvaluator>("optimized");
+builder.Services.AddSingleton<IExpressionEvaluationService, ExpressionEvaluationService>();
 
 // Basic abuse protection: cap requests per client so the evaluation endpoint
 // can't be used to hammer the service (defense in depth alongside the input

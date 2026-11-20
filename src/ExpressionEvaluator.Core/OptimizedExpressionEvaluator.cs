@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace ExpressionEvaluator.Core;
 
 /// <summary>
@@ -8,12 +10,15 @@ namespace ExpressionEvaluator.Core;
 /// </summary>
 public class OptimizedExpressionEvaluator : IExpressionEvaluator
 {
-    public double Evaluate(string expression)
+    public double Evaluate(string expression) => EvaluateWithTrace(expression).Result;
+
+    public EvaluationTrace EvaluateWithTrace(string expression)
     {
         var tokens = Tokenizer.Tokenize(expression);
+        var steps = new List<EvaluationStep>();
 
-        var stack = new Stack<double>();
-        char pendingOp = '+';
+        var terms = new List<double>();
+        var pendingOp = '+';
 
         for (var i = 0; i < tokens.Count; i++)
         {
@@ -21,31 +26,49 @@ public class OptimizedExpressionEvaluator : IExpressionEvaluator
             if (token.Type != TokenType.Number) continue;
 
             var value = token.Number;
+            string description;
+
             switch (pendingOp)
             {
                 case '+':
-                    stack.Push(value);
+                    terms.Add(value);
+                    description = $"Read {Fmt(value)}, pending op '+': push +{Fmt(value)} as a new term";
                     break;
                 case '-':
-                    stack.Push(-value);
+                    terms.Add(-value);
+                    description = $"Read {Fmt(value)}, pending op '-': push -{Fmt(value)} as a new term";
                     break;
                 case '*':
-                    stack.Push(stack.Pop() * value);
+                    var before = terms[^1];
+                    terms[^1] *= value;
+                    description = $"Read {Fmt(value)}, pending op '*': {Fmt(before)} * {Fmt(value)} = {Fmt(terms[^1])} (resolved immediately, no backtracking)";
                     break;
                 case '/':
-                    var top = stack.Pop();
                     if (value == 0) throw new ExpressionException("Division by zero.");
-                    stack.Push(top / value);
+                    var beforeDiv = terms[^1];
+                    terms[^1] /= value;
+                    description = $"Read {Fmt(value)}, pending op '/': {Fmt(beforeDiv)} / {Fmt(value)} = {Fmt(terms[^1])} (resolved immediately, no backtracking)";
                     break;
+                default:
+                    throw new ExpressionException($"Unsupported operator '{pendingOp}'.");
             }
+
+            steps.Add(new EvaluationStep(steps.Count + 1, description, BuildState(terms)));
 
             var nextOpIndex = i + 1;
             if (nextOpIndex < tokens.Count)
                 pendingOp = tokens[nextOpIndex].Operator;
         }
 
-        var result = 0.0;
-        while (stack.Count > 0) result += stack.Pop();
-        return result;
+        var result = terms.Sum();
+        steps.Add(new EvaluationStep(steps.Count + 1, $"Sum all terms = {Fmt(result)}", Fmt(result)));
+
+        return new EvaluationTrace { Result = result, Steps = steps };
     }
+
+    private static string BuildState(List<double> terms) => "[" + string.Join(", ", terms.Select(Fmt)) + "]";
+
+    private static string Fmt(double value) => value % 1 == 0
+        ? ((long)value).ToString(CultureInfo.InvariantCulture)
+        : value.ToString(CultureInfo.InvariantCulture);
 }

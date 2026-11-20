@@ -17,15 +17,22 @@ evaluator implementations, tests, security hardening, and docs.
   dependency. Two implementations of `IExpressionEvaluator`:
   - `BruteForceExpressionEvaluator` — O(n²) repeated-scan reduction.
   - `OptimizedExpressionEvaluator` — O(n) single-pass stack algorithm.
-- `src/ExpressionEvaluator.Api` — ASP.NET Core Web API exposing both via
-  `ExpressionController`, plus a `/compare` endpoint that runs both and
-  reports agreement.
-- `tests/ExpressionEvaluator.Tests` — xUnit tests for both evaluators and
-  the controller (shared theory data so both implementations are held to
-  the same contract).
-- `docs/` — `ARCHITECTURE.md` (diagram + component responsibilities),
-  `DESIGN.md` (design agent notes: trade-offs and alternatives considered),
-  `QA.md` (QA agent notes: test strategy and coverage rationale).
+- `src/ExpressionEvaluator.Api` — ASP.NET Core MVC Web API. Controllers are
+  thin; `Services/ExpressionEvaluationService` orchestrates the two
+  evaluators. Endpoints: `/evaluate`, `/evaluate/brute-force`,
+  `/evaluate/compare`, `/evaluate/trace` (step-by-step trace for both
+  algorithms, used by the dashboard).
+- `tests/ExpressionEvaluator.Tests` — xUnit tests (evaluators, service,
+  controller; shared theory data so both algorithms are held to the same
+  contract).
+- `dashboard/` — React/Vite/TS demo: live calculator + side-by-side
+  algorithm trace. Separate folder, separate deployable unit from the API.
+- `docs/` — architecture, design rationale, QA strategy, ticket list (see
+  `docs/TASKS.md` for status).
+- `agents/` — one file per project role (architecture, backend-dev,
+  frontend-dev, code-reviewer, devops, doc-writer, qa-engineer,
+  security-reviewer, task-manager, ui-ux-designer) with that role's
+  responsibilities and a checklist for future changes.
 
 ## How AI was used
 

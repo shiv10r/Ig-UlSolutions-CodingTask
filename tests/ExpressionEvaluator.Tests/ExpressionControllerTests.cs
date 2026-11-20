@@ -1,5 +1,6 @@
 using ExpressionEvaluator.Api.Controllers;
 using ExpressionEvaluator.Api.Models;
+using ExpressionEvaluator.Api.Services;
 using ExpressionEvaluator.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,8 +13,7 @@ public class ExpressionControllerTests
 {
     private readonly ExpressionController _sut = new(
         NullLogger<ExpressionController>.Instance,
-        new BruteForceExpressionEvaluator(),
-        new OptimizedExpressionEvaluator());
+        new ExpressionEvaluationService(new BruteForceExpressionEvaluator(), new OptimizedExpressionEvaluator()));
 
     [Fact]
     public void Evaluate_ValidExpression_ReturnsOkWithResult()
