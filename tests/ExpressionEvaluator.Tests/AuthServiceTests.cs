@@ -61,6 +61,25 @@ public class AuthServiceTests : IDisposable
         Assert.Null(await _sut.LoginAsync("nobody", "Secret123!"));
     }
 
+    [Fact]
+    public async Task RegisterAsync_NewUsername_CreatesUserAndReturnsToken()
+    {
+        var (outcome, token) = await _sut.RegisterAsync("newuser", "Password123!");
+
+        Assert.Equal(RegisterOutcome.Created, outcome);
+        Assert.NotNull(token);
+        Assert.NotNull(await _sut.LoginAsync("newuser", "Password123!"));
+    }
+
+    [Fact]
+    public async Task RegisterAsync_UsernameAlreadyTaken_ReturnsConflictOutcome()
+    {
+        var (outcome, token) = await _sut.RegisterAsync("admin", "AnotherPass1!");
+
+        Assert.Equal(RegisterOutcome.UsernameTaken, outcome);
+        Assert.Null(token);
+    }
+
     public void Dispose()
     {
         _db.Dispose();

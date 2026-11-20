@@ -20,6 +20,9 @@ Implements the C# API: evaluator logic, MVC controllers/services, DI wiring.
   locally), `Services/IAuthService`/`AuthService` (BCrypt verify + JWT
   issue), `Controllers/AuthController` (`/api/auth/login`, `/logout`).
   `ExpressionController` is `[Authorize]` at the class level.
+  `AuthController` also exposes `/api/auth/register` (new user, role
+  "User", returns a token immediately — same as login) alongside
+  `/login`/`/logout`.
 
 ## Conventions
 - All input validation happens once, in `Tokenizer` — never duplicated in a
