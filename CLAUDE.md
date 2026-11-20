@@ -1,0 +1,62 @@
+# CLAUDE.md — AI collaborator brief for this repository
+
+This file is read by Claude/Copilot-style coding agents working in this repo.
+It records how this project is organized and how AI assistance was used, per
+the "Use of AI" requirement in the coding task.
+
+## What this repo is
+
+A C# Web API that evaluates arithmetic string expressions (non-negative
+integers, `+ - * /`, standard operator precedence, no brackets), built as a
+small product rather than a single throwaway script: two interchangeable
+evaluator implementations, tests, security hardening, and docs.
+
+## Project layout
+
+- `src/ExpressionEvaluator.Core` — evaluation logic, no web framework
+  dependency. Two implementations of `IExpressionEvaluator`:
+  - `BruteForceExpressionEvaluator` — O(n²) repeated-scan reduction.
+  - `OptimizedExpressionEvaluator` — O(n) single-pass stack algorithm.
+- `src/ExpressionEvaluator.Api` — ASP.NET Core Web API exposing both via
+  `ExpressionController`, plus a `/compare` endpoint that runs both and
+  reports agreement.
+- `tests/ExpressionEvaluator.Tests` — xUnit tests for both evaluators and
+  the controller (shared theory data so both implementations are held to
+  the same contract).
+- `docs/` — `ARCHITECTURE.md` (diagram + component responsibilities),
+  `DESIGN.md` (design agent notes: trade-offs and alternatives considered),
+  `QA.md` (QA agent notes: test strategy and coverage rationale).
+
+## How AI was used
+
+This solution was built with Claude Code (Anthropic) as a pair-programmer
+across role-based passes, documented as separate "agent" notes so the
+reasoning behind each decision is traceable rather than implicit:
+
+1. **Architect pass** — chose the project split (Core/Api/Tests), the
+   evaluator interface, and the security boundary (see `docs/ARCHITECTURE.md`).
+2. **Design pass** — chose the brute-force and optimized algorithms and
+   documented why each is the "obvious" solution for its category, including
+   rejected alternatives like `DataTable.Compute` and a full recursive-descent
+   parser (see `docs/DESIGN.md`).
+3. **Implementation pass** — wrote `Tokenizer`, both evaluators, the
+   controller, and `Program.cs` hardening (rate limiting, security headers,
+   CORS allow-list, strict input validation).
+4. **QA pass** — derived test cases from the task's examples plus edge cases
+   (division by zero, malformed input, leading zeros, oversized input) and
+   verified both algorithms agree on every case (see `docs/QA.md`).
+
+No third-party expression-evaluation library was used; both evaluators are
+hand-written per the task's requirement.
+
+## Conventions for future AI-assisted changes in this repo
+
+- Keep evaluation logic in `ExpressionEvaluator.Core` free of ASP.NET Core
+  references — it should stay unit-testable in isolation.
+- Any new evaluator must implement `IExpressionEvaluator` and be covered by
+  the shared theory data in `tests/ExpressionEvaluator.Tests` so it is held
+  to the same input/output contract as the existing two.
+- All input validation lives in `Tokenizer` — do not duplicate parsing logic
+  in evaluators or the controller.
+- Branch from `develop01`, open PRs as `feature/* -> develop01`. Merges to
+  `main` are handled by the repository owner, not by an agent.
