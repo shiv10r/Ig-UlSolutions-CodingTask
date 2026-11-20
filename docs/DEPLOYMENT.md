@@ -39,3 +39,14 @@ Matches what you said you'd use (Supabase/Render/Vercel) and needs no
 architecture change — `IExpressionEvaluationService`/`IAuthService` don't
 know or care what's behind `AppDbContext`, so swapping SQLite → Postgres is
 a provider + connection-string change, not a rewrite.
+
+## Known failure mode: dashboard deployed alone
+
+Deploying only `dashboard/` to Vercel without an API live anywhere produces
+a dashboard that loads but fails every request ("Failed to fetch") — it's
+still pointed at `http://localhost:5080` by default. This is expected, not
+a bug: both pieces (API + dashboard) need to be live, API first, with
+`VITE_API_BASE_URL` set in Vercel and a redeploy triggered afterward (Vite
+bakes env vars in at build time, so the var alone isn't enough).
+
+DevOps checklist for deploy-related changes: `agents/devops.md`.

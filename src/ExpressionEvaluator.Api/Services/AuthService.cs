@@ -17,6 +17,23 @@ public class AuthService(AppDbContext db, JwtSettings jwtSettings) : IAuthServic
         return GenerateToken(user);
     }
 
+    public async Task<(RegisterOutcome Outcome, string? Token)> RegisterAsync(string username, string password)
+    {
+        var exists = await db.Users.AnyAsync(u => u.Username == username);
+        if (exists) return (RegisterOutcome.UsernameTaken, null);
+
+        var user = new User
+        {
+            Username = username,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+            Role = "User"
+        };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        return (RegisterOutcome.Created, GenerateToken(user));
+    }
+
     private string GenerateToken(User user)
     {
         var claims = new[]

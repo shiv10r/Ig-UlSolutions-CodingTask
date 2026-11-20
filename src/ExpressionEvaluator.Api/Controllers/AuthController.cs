@@ -24,6 +24,21 @@ public class AuthController(IAuthService authService) : ControllerBase
         return Ok(new LoginResponse { Token = token, Username = request.Username, ExpiresInMinutes = 60 });
     }
 
+    [HttpPost("register")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    {
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+        var (outcome, token) = await authService.RegisterAsync(request.Username, request.Password);
+        if (outcome == RegisterOutcome.UsernameTaken)
+            return Conflict(new { message = "That username is already taken." });
+
+        return StatusCode(StatusCodes.Status201Created, new LoginResponse { Token = token!, Username = request.Username, ExpiresInMinutes = 60 });
+    }
+
     /// <summary>
     /// JWTs are stateless, so there is no server-side session to end: this
     /// endpoint just confirms the caller still holds a valid token. The

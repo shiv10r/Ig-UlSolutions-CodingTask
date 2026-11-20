@@ -28,4 +28,7 @@ npm run dev
 Set `VITE_API_BASE_URL` (see `.env.example`) if the API runs elsewhere.
 
 Sign in with the `admin` username and the password printed once to the API's
-console log on its first run.
+console log on its first run, or use **Create account** to register a new
+user (`/api/auth/register`).
+
+Frontend/UI checklists: `agents/frontend-dev.md` and `agents/ui-ux-designer.md`.
