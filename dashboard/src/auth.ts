@@ -1,4 +1,6 @@
-export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5080'
+// Trailing slashes are stripped: a value like "https://api.example.com/" would
+// otherwise produce "//api/..." paths, which the API answers with 404.
+export const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5080').trim().replace(/\/+$/, '')
 const STORAGE_KEY = 'expressionEvaluator.auth'
 
 // fetch() rejects with a bare "Failed to fetch" for network/CORS failures;
