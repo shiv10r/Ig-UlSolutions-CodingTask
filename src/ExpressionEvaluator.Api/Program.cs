@@ -121,10 +121,11 @@ if (!string.IsNullOrEmpty(renderPort))
 
 var app = builder.Build();
 
-// Ensure the local SQLite database exists and seed a single admin user on
-// first run only. The generated password is logged once (Warning level) and
-// is never written anywhere else — not to the database in plaintext, not to
-// any file in this repo.
+// Ensure the database exists and seed one admin user on first run.
+// - Seed:AdminPassword set (env var Seed__AdminPassword): use it, never log it.
+// - Not set, Development: generate one and log it once to the local console.
+// - Not set, any hosted environment: skip seeding rather than print a password
+//   into the host's log stream; users can still self-register.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -132,22 +133,39 @@ using (var scope = app.Services.CreateScope())
 
     if (!db.Users.Any())
     {
-        var generatedPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(12))
-            .Replace("+", "A").Replace("/", "B").Replace("=", "C");
-
-        db.Users.Add(new User
-        {
-            Username = "admin",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(generatedPassword),
-            Role = "Admin"
-        });
-        db.SaveChanges();
-
         var logger = app.Services.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(
-            "Seeded default admin user on first run. Username: {Username}  Password: {Password}  " +
-            "This password is shown here ONCE and is not stored anywhere else in this repo — save it now and change it after first login.",
-            "admin", generatedPassword);
+        var configuredPassword = app.Configuration["Seed:AdminPassword"];
+        string? adminPassword = null;
+
+        if (!string.IsNullOrEmpty(configuredPassword))
+        {
+            adminPassword = configuredPassword;
+            logger.LogInformation("Seeded admin user from Seed:AdminPassword configuration.");
+        }
+        else if (app.Environment.IsDevelopment())
+        {
+            adminPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(12))
+                .Replace("+", "A").Replace("/", "B").Replace("=", "C");
+            logger.LogWarning(
+                "Seeded default admin user on first run. Username: {Username}  Password: {Password}  " +
+                "Shown once, local Development only - save it now.",
+                "admin", adminPassword);
+        }
+        else
+        {
+            logger.LogInformation("No Seed:AdminPassword configured; skipping admin seed. Users can self-register.");
+        }
+
+        if (adminPassword is not null)
+        {
+            db.Users.Add(new User
+            {
+                Username = "admin",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
+                Role = "Admin"
+            });
+            db.SaveChanges();
+        }
     }
 }
 

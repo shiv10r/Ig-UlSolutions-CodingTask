@@ -37,8 +37,13 @@ set up. This documents the path end to end.
      no trailing slash); add `AllowedOrigins__1`, etc. for more
    - `AllowedOriginPatterns__0` — optional, for Vercel preview URLs whose
      hash changes every deploy, e.g. `https://dashboard-*-vsr11.vercel.app`.
-     `*` matches one host label only (letters, digits, hyphens — never a
-     dot), so it can't be widened to another domain; a bare `*` is ignored.
+     Exactly one `*`, inside a label that also has fixed text, followed by
+     at least two fixed labels; it matches letters/digits/hyphens only,
+     never a dot. Anything wider (`*`, `https://*.vercel.app`) makes the API
+     refuse to start, so a typo can't silently open CORS.
+   - `Seed__AdminPassword` — optional. If set, an `admin` user is created
+     with it on first start (never logged). If not set, no admin is seeded
+     on Render — use **Create account** on the login screen instead.
 
    Set Render's **Health Check Path** to `/health` (anonymous, not rate
    limited). Behind Render's proxy the API trusts only the last

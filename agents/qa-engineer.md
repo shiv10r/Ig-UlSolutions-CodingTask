@@ -3,7 +3,11 @@
 ## Role
 Defines and maintains test coverage; the last gate before a PR is called done.
 
-## What's covered on this project (66 xUnit tests)
+## What's covered on this project (84 xUnit tests)
+
+- `OriginMatcherTests` — CORS origins: exact + pattern matches allowed;
+  spoofed suffixes, other teams, wrong scheme rejected; unsafe patterns
+  (`*`, `https://*.*`, `https://*.vercel.app`) fail at construction.
 - Shared theory data (`ExpressionEvaluatorTheoryData`) run against both
   evaluators — same valid/invalid cases, both must agree.
 - `EvaluationTraceTests` — trace output ends at the correct result with more

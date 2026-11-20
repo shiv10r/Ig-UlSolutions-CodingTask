@@ -7,7 +7,7 @@ public class OriginMatcherTests
 {
     private readonly OriginMatcher _sut = new(
         ["http://localhost:5173", "https://dashboard.example.com/"],
-        ["https://dashboard-*-vsr11.vercel.app", "*"]);
+        ["https://dashboard-*-vsr11.vercel.app"]);
 
     [Theory]
     [InlineData("http://localhost:5173")]
@@ -31,5 +31,17 @@ public class OriginMatcherTests
     public void IsAllowed_UnlistedOrSpoofedOrigins_ReturnsFalse(string origin)
     {
         Assert.False(_sut.IsAllowed(origin));
+    }
+
+    [Theory]
+    [InlineData("*")]
+    [InlineData("https://*.*")]
+    [InlineData("https://*.vercel.app")]
+    [InlineData("https://dashboard-*.app")]
+    [InlineData("https://dashboard-*-*.vercel.app")]
+    [InlineData("dashboard-*-vsr11.vercel.app")]
+    public void Constructor_UnsafePattern_Throws(string pattern)
+    {
+        Assert.Throws<InvalidOperationException>(() => new OriginMatcher([], [pattern]));
     }
 }
