@@ -1,0 +1,159 @@
+:root {
+  color-scheme: light dark;
+}
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+header h1 {
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  opacity: 0.7;
+  margin-top: 0;
+}
+
+.card {
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.input-row input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+}
+
+.input-row button {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background: #8e1537;
+  color: white;
+  cursor: pointer;
+}
+
+.input-row button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.examples {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.example-chip {
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.error {
+  color: #d33;
+  margin-top: 1rem;
+}
+
+.result {
+  margin-top: 1.25rem;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.result-row .label {
+  opacity: 0.75;
+}
+
+.result-row .value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.match-badge {
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  display: inline-block;
+}
+
+.match-badge.ok {
+  background: rgba(34, 160, 80, 0.15);
+  color: #1d8a4d;
+}
+
+.match-badge.fail {
+  background: rgba(211, 51, 51, 0.15);
+  color: #d33;
+}
+
+.docs-links {
+  font-size: 0.9rem;
+}
+
+.trace-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 560px) {
+  .trace-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.trace-column h3 {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.8;
+}
+
+.steps {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.steps li {
+  font-size: 0.85rem;
+}
+
+.step-desc {
+  display: block;
+}
+
+.step-state {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  opacity: 0.65;
+  margin-top: 0.15rem;
+}

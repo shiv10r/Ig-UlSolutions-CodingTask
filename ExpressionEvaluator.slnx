@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ExpressionEvaluator.Api/ExpressionEvaluator.Api.csproj" />
+    <Project Path="src/ExpressionEvaluator.Core/ExpressionEvaluator.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ExpressionEvaluator.Tests/ExpressionEvaluator.Tests.csproj" />
+  </Folder>
+</Solution>
