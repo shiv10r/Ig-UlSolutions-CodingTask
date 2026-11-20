@@ -1,0 +1,19 @@
+## .NET
+bin/
+obj/
+*.user
+.vs/
+*.db
+*.db-shm
+*.db-wal
+
+## Node / React (for the future dashboard)
+node_modules/
+dist/
+build/
+.env
+.env.local
+
+## OS
+.DS_Store
+Thumbs.db
