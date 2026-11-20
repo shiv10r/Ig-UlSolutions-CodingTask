@@ -1,7 +1,7 @@
 # Deployment plan
 
-Not deployed yet — this documents the intended path so it can be done in one
-pass once you're ready, without re-deciding the approach each time.
+In progress — dashboard deployed to Vercel, API deployment to Render being
+set up. This documents the path end to end.
 
 ## Target: Vercel (dashboard) + Render (API) + Supabase (Postgres)
 
@@ -20,12 +20,21 @@ pass once you're ready, without re-deciding the approach each time.
    change — EF Core abstracts the provider. Point `ConnectionStrings:Default`
    at the Supabase connection string via an environment variable, never
    committed.
-2. **Backend (Render)**: deploy `src/ExpressionEvaluator.Api` as a Render Web
-   Service. Required environment variables:
+2. **Backend (Render)**: a root-level `Dockerfile` builds and publishes
+   `src/ExpressionEvaluator.Api` (multi-stage: SDK image to build, ASP.NET
+   runtime image to run). Deploy as a Render Web Service with **Branch:
+   `main`**, **Runtime: Docker**. `Program.cs` honors Render's `PORT` env
+   var automatically (binds Kestrel to it) — no extra config needed for
+   that part. Required environment variables:
    - `ConnectionStrings__Default` — Supabase Postgres connection string
+     (SQLite still works for a quick first deploy, but Render's filesystem
+     is ephemeral — data is lost on every redeploy/restart until this is
+     swapped in)
    - `Jwt__Key` — a real, stable secret (32+ bytes); without it the app
      refuses to start outside Development, by design (see `Program.cs`)
-   - `AllowedOrigins__0` — the deployed Vercel URL, so CORS allows it
+   - `AllowedOrigins__0` — the deployed Vercel URL(s) that should be allowed
+     to call this API (exact origin, e.g. `https://your-app.vercel.app`,
+     no trailing slash); add `AllowedOrigins__1`, etc. for more
 3. **Frontend (Vercel)**: deploy `dashboard/` with build command
    `npm run build`, output directory `dist`. Set `VITE_API_BASE_URL` to the
    Render API's public URL.
@@ -48,5 +57,23 @@ still pointed at `http://localhost:5080` by default. This is expected, not
 a bug: both pieces (API + dashboard) need to be live, API first, with
 `VITE_API_BASE_URL` set in Vercel and a redeploy triggered afterward (Vite
 bakes env vars in at build time, so the var alone isn't enough).
+
+## Known failure mode: Render had no Dockerfile
+
+First Render deploy attempt failed at build: `open Dockerfile: no such file
+or directory` — Render was configured for a Docker-runtime build but the
+repo had none yet. Fixed by adding a root `Dockerfile` (see above).
+
+## Known failure mode: CORS blocks the deployed dashboard
+
+After the API was live, requests from the deployed dashboard failed with a
+browser CORS error (not "Failed to fetch" — the preflight `OPTIONS` request
+succeeded with 204, but the actual request was blocked) because the
+Vercel URL wasn't in `AllowedOrigins` on the Render deployment. Fix: add
+the exact Vercel origin to `AllowedOrigins__0` (etc.) in Render's
+environment variables. Vercel **preview** URLs change per deploy (the
+random hash in `dashboard-<hash>-<team>.vercel.app`), so point this at
+Vercel's stable production URL/alias instead, or it goes stale every
+redeploy.
 
 DevOps checklist for deploy-related changes: `agents/devops.md`.

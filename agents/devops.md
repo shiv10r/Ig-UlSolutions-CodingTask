@@ -14,14 +14,19 @@ CI/CD, branching policy, deployment pipelines.
   (`dotnet run --project src/ExpressionEvaluator.Api`), dashboard on
   `http://localhost:5173` (`npm run dev` inside `dashboard/`).
 
-## Not yet done (deliberately deferred, needs explicit go-ahead)
-- Full deployment plan written: `docs/DEPLOYMENT.md` (Vercel for `dashboard/`,
-  Render for the API, Supabase Postgres swapped in for local SQLite).
-  Not executed yet — needs hosting accounts/secrets, which only the repo
-  owner should hold.
+## What's in place for deployment
+- Root `Dockerfile` (multi-stage: SDK build → ASP.NET runtime) builds just
+  `src/ExpressionEvaluator.Api` for Render's Docker runtime.
+  `Program.cs` binds Kestrel to Render's `PORT` env var automatically.
+- `docs/DEPLOYMENT.md` has the full plan (Vercel for `dashboard/`, Render
+  for the API, Supabase Postgres swapped in for local SQLite) and the
+  required Render env vars.
 - Local data store is SQLite (`expressionevaluator.db`, gitignored, never
   committed) with one seeded admin user — see `docs/ARCHITECTURE.md` for
-  the seeding/secret-handling rules.
+  the seeding/secret-handling rules. On Render without a Postgres
+  connection string, SQLite still runs but data is lost on every
+  redeploy/restart (ephemeral filesystem) — fine for a quick demo, not for
+  anything that needs to persist.
 
 ## Real incident: dashboard deployed alone fails silently
 
@@ -39,3 +44,5 @@ so setting the var without rebuilding does nothing).
 - [ ] CI must stay green before any deploy workflow is added on top of it.
 - [ ] Deploy order: API (Render) first, then the dashboard (Vercel) pointed at its public URL — never the reverse.
 - [ ] `main` is the deploy branch for both Vercel and Render — not `develop01` or a feature branch.
+- [ ] Vercel's deployed origin is in Render's `AllowedOrigins__*` env vars (use the stable production URL, not a per-deploy preview hash).
+- [ ] `Jwt__Key` and `ConnectionStrings__Default` are set as Render env vars before the service is expected to actually work, not just to boot.
