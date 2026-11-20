@@ -1,4 +1,4 @@
-# QA — QA agent notes
+# QA
 
 ## Strategy
 
@@ -60,6 +60,9 @@ local database file:
 - Correct username/password returns a well-formed JWT (3 dot-separated parts).
 - Wrong password returns `null` (no token issued).
 - Unknown username returns `null` (no username-enumeration timing shortcut).
+- Registering a new username succeeds and returns a token; the new user can
+  then log in with the same credentials.
+- Registering an already-taken username returns `Conflict`, no token.
 
 Not covered by an automated test: the full HTTP 401 round-trip on protected
 `ExpressionController` routes (requires `Microsoft.AspNetCore.Mvc.Testing`,
@@ -73,5 +76,8 @@ the same dependency deferred above) — verified manually instead (see
 dotnet test
 ```
 
-64 tests, all passing as of this pass (2 evaluators × ~21 theory cases,
-trace tests, service/controller tests, and 3 auth service tests).
+66 tests, all passing as of this pass (2 evaluators × ~21 theory cases,
+trace tests, service/controller tests, and 5 auth service tests).
+
+Per-role checklists (QA, code review) live in `agents/qa-engineer.md` and
+`agents/code-reviewer.md` — followed on every change, not just written once.

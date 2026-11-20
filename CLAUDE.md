@@ -23,12 +23,13 @@ evaluator implementations, tests, security hardening, and docs.
   `/evaluate/brute-force`, `/evaluate/compare`, `/evaluate/trace`) require a
   JWT (`[Authorize]`). `Data/AppDbContext` (SQLite locally) +
   `Services/AuthService` + `Controllers/AuthController` provide
-  `/api/auth/login` and `/api/auth/logout`.
+  `/api/auth/login`, `/api/auth/register`, and `/api/auth/logout`.
 - `tests/ExpressionEvaluator.Tests` — xUnit tests (evaluators, service,
-  controller; shared theory data so both algorithms are held to the same
-  contract).
-- `dashboard/` — React/Vite/TS demo: live calculator + side-by-side
-  algorithm trace. Separate folder, separate deployable unit from the API.
+  controller, auth; shared theory data so both algorithms are held to the
+  same contract).
+- `dashboard/` — React/Vite/TS: login/register, then a 4-tab app
+  (Calculator, Visualize, Architecture, About). Separate folder, separate
+  deployable unit from the API.
 - `docs/` — architecture, design rationale, QA strategy, ticket list (see
   `docs/TASKS.md` for status).
 - `agents/` — one file per project role (architecture, backend-dev,
@@ -60,12 +61,9 @@ hand-written per the task's requirement.
 
 ## Conventions for future AI-assisted changes in this repo
 
-- Keep evaluation logic in `ExpressionEvaluator.Core` free of ASP.NET Core
-  references — it should stay unit-testable in isolation.
-- Any new evaluator must implement `IExpressionEvaluator` and be covered by
-  the shared theory data in `tests/ExpressionEvaluator.Tests` so it is held
-  to the same input/output contract as the existing two.
-- All input validation lives in `Tokenizer` — do not duplicate parsing logic
-  in evaluators or the controller.
-- Branch from `develop01`, open PRs as `feature/* -> develop01`. Merges to
-  `main` are handled by the repository owner, not by an agent.
+Per-role responsibilities and checklists (backend, frontend, QA, security,
+DevOps, etc.) live in `agents/` — read the matching file before making a
+change in that area, rather than re-deriving the rules here.
+
+Branch from `develop01`, open PRs as `feature/* -> develop01`. Merges to
+`main` are handled by the repository owner, not by an agent.

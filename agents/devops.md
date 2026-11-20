@@ -23,7 +23,19 @@ CI/CD, branching policy, deployment pipelines.
   committed) with one seeded admin user — see `docs/ARCHITECTURE.md` for
   the seeding/secret-handling rules.
 
+## Real incident: dashboard deployed alone fails silently
+
+The dashboard was deployed to Vercel before the API existed anywhere public.
+Result: page loads, every request fails with "Failed to fetch" — it was
+still pointed at `http://localhost:5080`. Not a bug, but a real ordering
+mistake worth avoiding next time: **deploy the API first**, get its public
+URL, then deploy the dashboard pointed at it. See `docs/DEPLOYMENT.md` for
+the fix (`VITE_API_BASE_URL` + redeploy — Vite bakes env vars at build time,
+so setting the var without rebuilding does nothing).
+
 ## Checklist before adding a deploy step
 - [ ] Confirm hosting target with the repo owner before wiring secrets/workflows.
-- [ ] Never commit API keys/connection strings — use GitHub Actions secrets or Vercel env vars.
+- [ ] Never commit API keys/connection strings — use GitHub Actions secrets or Vercel/Render env vars.
 - [ ] CI must stay green before any deploy workflow is added on top of it.
+- [ ] Deploy order: API (Render) first, then the dashboard (Vercel) pointed at its public URL — never the reverse.
+- [ ] `main` is the deploy branch for both Vercel and Render — not `develop01` or a feature branch.

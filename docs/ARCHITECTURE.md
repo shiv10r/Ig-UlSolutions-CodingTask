@@ -16,7 +16,7 @@ flowchart LR
 
     subgraph API["ExpressionEvaluator.Api"]
         MW["Middleware:\nrate limiter, security headers, CORS,\nauthentication (JWT)"]
-        Auth["AuthController\n/api/auth/login, /logout"]
+        Auth["AuthController\n/api/auth/login, /register, /logout"]
         Ctrl["ExpressionController\n[Authorize]"]
         Svc["ExpressionEvaluationService"]
         DB[("AppDbContext\nSQLite: Users")]
@@ -48,6 +48,9 @@ flowchart LR
 1. `POST /api/auth/login` with username/password. `AuthService` verifies the
    BCrypt hash in `AppDbContext.Users` and, if valid, issues a signed JWT
    (HMAC-SHA256, `Jwt:Issuer`/`Jwt:Audience`/`Jwt:Key` from configuration).
+   `POST /api/auth/register` creates a new user (role `"User"`, BCrypt
+   hash) and returns a token the same way, or HTTP 409 if the username is
+   already taken.
 2. All `ExpressionController` endpoints (`/evaluate`, `/evaluate/brute-force`,
    `/evaluate/compare`, `/evaluate/trace`) require `[Authorize]` — a request
    without a valid `Authorization: Bearer <token>` header gets HTTP 401
@@ -110,7 +113,7 @@ flowchart LR
 | Clickjacking / MIME sniffing | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` response headers. |
 | Dependency supply chain | Calculation logic uses no third-party packages; auth/DB packages (EF Core SQLite, JWT Bearer, BCrypt.Net-Next) were approved explicitly before adding, per this repo's policy. A transitive `SQLitePCLRaw` CVE (NU1903) was caught during install and pinned to a patched version. |
 | Password storage | Never plaintext — BCrypt hash only, stored in SQLite. |
-| Endpoint-level access control | Every `ExpressionController` route requires a valid JWT (`[Authorize]`); only `/api/auth/login` is anonymous. |
+| Endpoint-level access control | Every `ExpressionController` route requires a valid JWT (`[Authorize]`); only `/api/auth/login` and `/api/auth/register` are anonymous. |
 | Secret management | JWT signing key and real DB connection strings are configuration (env vars/secret store), never committed; the local SQLite file is gitignored. |
 
 ## Deliberately out of scope for this pass
@@ -118,5 +121,6 @@ flowchart LR
 - Deployment (Vercel/Render/Supabase) — plan documented in
   `docs/DEPLOYMENT.md`, not yet executed; awaiting hosting account setup.
 - Token revocation / refresh tokens — logout is client-side only (see above).
-- User registration/management UI — one seeded admin user only; adding
-  users today means inserting directly into the `Users` table.
+- User management UI (promote/demote role, delete user, reset password) —
+  registration exists (`/api/auth/register`), management does not; today
+  that means editing the `Users` table directly.
