@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import './App.css'
+import LoginForm from './LoginForm'
+import { loadSession, logout, type AuthSession } from './auth'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5080'
 
@@ -23,7 +25,7 @@ type ApiError = { detail?: string; title?: string }
 
 const EXAMPLES = ['4+5*2', '4+5/2', '4+5/2-1']
 
-function App() {
+function Calculator({ session, onLogout }: { session: AuthSession; onLogout: () => void }) {
   const [expression, setExpression] = useState('4+5/2-1')
   const [result, setResult] = useState<CompareResult | null>(null)
   const [trace, setTrace] = useState<TraceResult | null>(null)
@@ -33,9 +35,13 @@ function App() {
   async function post<T>(path: string, expr: string): Promise<T> {
     const res = await fetch(`${API_BASE}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` },
       body: JSON.stringify({ expression: expr }),
     })
+    if (res.status === 401) {
+      onLogout()
+      throw new Error('Session expired — please sign in again.')
+    }
     if (!res.ok) {
       const body: ApiError = await res.json().catch(() => ({}))
       throw new Error(body.detail ?? `Request failed (${res.status})`)
@@ -64,9 +70,15 @@ function App() {
 
   return (
     <main className="page">
-      <header>
-        <h1>Expression Evaluator</h1>
-        <p className="subtitle">UL Solutions coding task — live demo</p>
+      <header className="header-row">
+        <div>
+          <h1>Expression Evaluator</h1>
+          <p className="subtitle">UL Solutions coding task — live demo</p>
+        </div>
+        <div className="session-info">
+          <span>{session.username}</span>
+          <button className="link-button" onClick={onLogout}>Log out</button>
+        </div>
       </header>
 
       <section className="card">
@@ -159,6 +171,19 @@ function App() {
       </section>
     </main>
   )
+}
+
+function App() {
+  const [session, setSession] = useState<AuthSession | null>(() => loadSession())
+
+  async function handleLogout() {
+    if (session) await logout(session).catch(() => {})
+    setSession(null)
+  }
+
+  return session
+    ? <Calculator session={session} onLogout={handleLogout} />
+    : <LoginForm onLogin={setSession} />
 }
 
 export default App

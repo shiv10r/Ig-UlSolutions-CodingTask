@@ -51,11 +51,27 @@ not to add third-party dependencies without discussion/approval first. The
 controller-level tests already exercise the same production code path
 (`ExpressionController` → `IExpressionEvaluator`) without that dependency.
 
+## Auth coverage
+
+`AuthServiceTests` uses an in-memory SQLite connection (`Microsoft.Data.Sqlite`,
+already available transitively via the `ExpressionEvaluator.Api` project
+reference — no new test package needed) to verify, without hitting the real
+local database file:
+- Correct username/password returns a well-formed JWT (3 dot-separated parts).
+- Wrong password returns `null` (no token issued).
+- Unknown username returns `null` (no username-enumeration timing shortcut).
+
+Not covered by an automated test: the full HTTP 401 round-trip on protected
+`ExpressionController` routes (requires `Microsoft.AspNetCore.Mvc.Testing`,
+the same dependency deferred above) — verified manually instead (see
+`docs/ARCHITECTURE.md` and the PR description for the curl trace: no token →
+401, valid token → 200, wrong password → 401).
+
 ## Running the tests
 
 ```bash
 dotnet test
 ```
 
-47 tests, all passing as of this pass (2 evaluators × ~21 theory cases +
-1 oversized-input case + 5 controller tests).
+64 tests, all passing as of this pass (2 evaluators × ~21 theory cases,
+trace tests, service/controller tests, and 3 auth service tests).

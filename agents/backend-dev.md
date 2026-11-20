@@ -14,7 +14,12 @@ Implements the C# API: evaluator logic, MVC controllers/services, DI wiring.
     `IExpressionEvaluationService`, the only thing controllers talk to.
   - **Controllers** — `ExpressionController` exposes `/evaluate`,
     `/evaluate/brute-force`, `/evaluate/compare`, `/evaluate/trace`.
-- `Program.cs`: DI registration, rate limiting, CORS, security headers.
+- `Program.cs`: DI registration, rate limiting, CORS, security headers, JWT
+  auth setup, SQLite `AppDbContext` registration, first-run admin seeding.
+- **Auth**: `Data/User.cs` (entity), `Data/AppDbContext.cs` (EF Core, SQLite
+  locally), `Services/IAuthService`/`AuthService` (BCrypt verify + JWT
+  issue), `Controllers/AuthController` (`/api/auth/login`, `/logout`).
+  `ExpressionController` is `[Authorize]` at the class level.
 
 ## Conventions
 - All input validation happens once, in `Tokenizer` — never duplicated in a
