@@ -76,8 +76,13 @@ the same dependency deferred above) — verified manually instead (see
 dotnet test
 ```
 
-66 tests, all passing as of this pass (2 evaluators × ~21 theory cases,
-trace tests, service/controller tests, and 5 auth service tests).
+84 tests, all passing as of this pass (2 evaluators × ~21 theory cases,
+trace tests, service/controller tests, 5 auth service tests, and 18
+`OriginMatcherTests` covering allowed, spoofed, and unsafe CORS patterns).
+
+The `qa-engineer` subagent (`.claude/agents/qa-engineer.md`) also runs the
+API in Render mode (`PORT` set) and checks auth, evaluation, `/health`, and
+CORS preflights from allowed vs spoofed origins with curl.
 
 Per-role checklists (QA, code review) live in `agents/qa-engineer.md` and
 `agents/code-reviewer.md` — followed on every change, not just written once.

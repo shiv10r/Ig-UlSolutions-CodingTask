@@ -1,5 +1,15 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5080'
+export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5080'
 const STORAGE_KEY = 'expressionEvaluator.auth'
+
+// fetch() rejects with a bare "Failed to fetch" for network/CORS failures;
+// say which API it was trying to reach so a misconfigured deploy is obvious.
+export async function apiFetch(path: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(`${API_BASE}${path}`, init)
+  } catch {
+    throw new Error(`Can't reach the API at ${API_BASE}. It may be down, or this site's origin isn't in its CORS allow-list.`)
+  }
+}
 
 export type AuthSession = { token: string; username: string }
 
@@ -29,7 +39,7 @@ function clearSession() {
 }
 
 async function authRequest(path: string, username: string, password: string): Promise<AuthSession> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await apiFetch(path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
@@ -54,7 +64,7 @@ export function register(username: string, password: string): Promise<AuthSessio
 
 export async function logout(session: AuthSession): Promise<void> {
   try {
-    await fetch(`${API_BASE}/api/auth/logout`, {
+    await apiFetch('/api/auth/logout', {
       method: 'POST',
       headers: { Authorization: `Bearer ${session.token}` },
     })

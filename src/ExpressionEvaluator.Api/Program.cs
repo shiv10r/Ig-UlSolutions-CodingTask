@@ -2,9 +2,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.RateLimiting;
 using ExpressionEvaluator.Api.Data;
+using ExpressionEvaluator.Api.Security;
 using ExpressionEvaluator.Api.Services;
 using ExpressionEvaluator.Core;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -91,20 +93,39 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
+var originMatcher = new OriginMatcher(
+    builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? [],
+    builder.Configuration.GetSection("AllowedOriginPatterns").Get<string[]>() ?? []);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Dashboard", policy =>
-        policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? [])
+        policy.SetIsOriginAllowed(originMatcher.IsAllowed)
               .AllowAnyHeader()
               .WithMethods("GET", "POST"));
 });
 
+// Behind Render's proxy every request arrives from the proxy's IP, which would
+// put all users in one rate-limit bucket. Trust only the last X-Forwarded-For
+// hop (the one the proxy appends), so clients can't spoof their own IP.
+if (!string.IsNullOrEmpty(renderPort))
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.ForwardLimit = 1;
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+}
+
 var app = builder.Build();
 
-// Ensure the local SQLite database exists and seed a single admin user on
-// first run only. The generated password is logged once (Warning level) and
-// is never written anywhere else — not to the database in plaintext, not to
-// any file in this repo.
+// Ensure the database exists and seed one admin user on first run.
+// - Seed:AdminPassword set (env var Seed__AdminPassword): use it, never log it.
+// - Not set, Development: generate one and log it once to the local console.
+// - Not set, any hosted environment: skip seeding rather than print a password
+//   into the host's log stream; users can still self-register.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -112,22 +133,39 @@ using (var scope = app.Services.CreateScope())
 
     if (!db.Users.Any())
     {
-        var generatedPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(12))
-            .Replace("+", "A").Replace("/", "B").Replace("=", "C");
-
-        db.Users.Add(new User
-        {
-            Username = "admin",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(generatedPassword),
-            Role = "Admin"
-        });
-        db.SaveChanges();
-
         var logger = app.Services.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(
-            "Seeded default admin user on first run. Username: {Username}  Password: {Password}  " +
-            "This password is shown here ONCE and is not stored anywhere else in this repo — save it now and change it after first login.",
-            "admin", generatedPassword);
+        var configuredPassword = app.Configuration["Seed:AdminPassword"];
+        string? adminPassword = null;
+
+        if (!string.IsNullOrEmpty(configuredPassword))
+        {
+            adminPassword = configuredPassword;
+            logger.LogInformation("Seeded admin user from Seed:AdminPassword configuration.");
+        }
+        else if (app.Environment.IsDevelopment())
+        {
+            adminPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(12))
+                .Replace("+", "A").Replace("/", "B").Replace("=", "C");
+            logger.LogWarning(
+                "Seeded default admin user on first run. Username: {Username}  Password: {Password}  " +
+                "Shown once, local Development only - save it now.",
+                "admin", adminPassword);
+        }
+        else
+        {
+            logger.LogInformation("No Seed:AdminPassword configured; skipping admin seed. Users can self-register.");
+        }
+
+        if (adminPassword is not null)
+        {
+            db.Users.Add(new User
+            {
+                Username = "admin",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
+                Role = "Admin"
+            });
+            db.SaveChanges();
+        }
     }
 }
 
@@ -145,10 +183,21 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseRateLimiter();
+if (!string.IsNullOrEmpty(renderPort))
+{
+    app.UseForwardedHeaders();
+}
+
+// CORS runs before the rate limiter so a 429 still carries CORS headers -
+// otherwise the browser reports it as a misleading CORS error.
 app.UseCors("Dashboard");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
+   .AllowAnonymous()
+   .DisableRateLimiting();
 
 app.MapControllers();
 
